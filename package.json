@@ -1,0 +1,15 @@
+{
+  "name": "react-native-bdpush",
+  "version": "2.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qiepeipei/react-native-bdpush/"
+  },
+  "author": "",
+  "license": "ISC"
+}
