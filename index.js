@@ -83,6 +83,13 @@ async getChannelId(){
   }
 }
 
+async getUserId() {
+    try {
+        return await PushObj.getUserId();
+    } catch (e) {
+        return null;
+    }
+}
 
 
 testSend(){

@@ -28,6 +28,7 @@ public class BGBaiDuPushModule extends ReactContextBaseJavaModule {
     static public String DidReceiveMessage = "DidReceiveMessage";
     static public String DidOpenMessage = "DidOpenMessage";
     static public String channelId = "";
+    static public String userId = "";
     public BGBaiDuPushModule(ReactApplicationContext reactContext) {
         super(reactContext);
         myPush = this;
@@ -83,6 +84,19 @@ public class BGBaiDuPushModule extends ReactContextBaseJavaModule {
         try {
 
             promise.resolve(BGBaiDuPushModule.channelId);
+
+        } catch (IllegalViewOperationException e) {
+
+            promise.reject(e.getMessage());
+
+        }
+    }
+
+    @ReactMethod
+    public void getUserId(Promise promise){
+        try {
+
+            promise.resolve(BGBaiDuPushModule.userId);
 
         } catch (IllegalViewOperationException e) {
 

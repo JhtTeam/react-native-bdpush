@@ -30,7 +30,7 @@ public class MyPushMessageReceiver extends PushMessageReceiver {
         Log.d("百度推送", responseString);
 
         BGBaiDuPushModule.channelId = channelId;
-
+        BGBaiDuPushModule.userId = userId;
     }
 
     @Override
