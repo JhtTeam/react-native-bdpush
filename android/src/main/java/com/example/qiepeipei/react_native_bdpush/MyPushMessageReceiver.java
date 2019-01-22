@@ -65,8 +65,8 @@ public class MyPushMessageReceiver extends PushMessageReceiver {
     * */
     @Override
     public void onMessage(Context context, String message, String customContentString) {
-        Log.d("百度推送", "收到透传消息");
-
+        Log.d("百度推送", "onMessage");
+        BGBaiDuPushModule.myPush.sendMsg("",message,customContentString,BGBaiDuPushModule.DidReceiveMessage);
     }
 
     /*接收通知点击的函数
@@ -79,7 +79,7 @@ public class MyPushMessageReceiver extends PushMessageReceiver {
     @Override
     public void onNotificationClicked(Context context, String title, String description, String customContentString) {
 
-        Log.d("百度推送", "已点击通知栏");
+        Log.d("百度推送", "onNotificationClicked");
 
         //发送通知
         BGBaiDuPushModule.myPush.sendMsg(title,description,customContentString,BGBaiDuPushModule.DidOpenMessage);
@@ -102,7 +102,7 @@ public class MyPushMessageReceiver extends PushMessageReceiver {
     @Override
     public void onNotificationArrived(Context context, String title, String description, String customContentString) {
 
-        Log.d("百度推送", "收到通知消息");
+        Log.d("百度推送", "onNotificationArrived");
         if(!isAppIsInBackground(context)){
             //发送通知
             BGBaiDuPushModule.myPush.sendMsg(title,description,customContentString,BGBaiDuPushModule.DidReceiveMessage);
