@@ -29,5 +29,5 @@ dependencies {
     })
     compile 'com.facebook.react:react-native:+'
     testCompile 'junit:junit:4.12'
-    compile files('libs/pushservice-5.7.0.95.jar')
+    compile files('libs/pushservice-6.5.0.75.jar')
 }
