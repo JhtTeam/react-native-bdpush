@@ -97,11 +97,14 @@ public class MyPushMessageReceiver extends PushMessageReceiver {
         handleEvent(applicationContext, new ReactContextInitListener() {
             @Override
             public void contextInitialized(ReactApplicationContext context) {
+                Log.d("百度推送", "contextInitialized");
 //                    BGBaiDuPushModule.myPush.sendMsg(_title, _description, customContentString, BGBaiDuPushModule.DidReceiveMessage);
-                if (!isAppIsInBackground(context)) {
+                if (isApplicationInForeground(context)) {
+                    Log.d("百度推送", "contextInitialized... isApplicationInForeground" );;
                     BGBaiDuPushModule.myPush.sendMsg(_title, _description, customContentString, BGBaiDuPushModule.DidReceiveMessage);
                 } else {
                     final Bundle bundle = createBundleFromMessage(message);
+                    Log.d("百度推送", bundle.toString());
                     handleRemotePushNotification(context, bundle);
                 }
             }
@@ -109,14 +112,14 @@ public class MyPushMessageReceiver extends PushMessageReceiver {
     }
 
     private void handleRemotePushNotification(ReactApplicationContext context, Bundle bundle) {
-
+        Log.d("百度推送", "handleRemotePushNotification");
         // If notification ID is not provided by the user for push notification, generate one at random
         if (bundle.getString("id") == null) {
             Random randomNumberGenerator = new Random(System.currentTimeMillis());
             bundle.putString("id", String.valueOf(randomNumberGenerator.nextInt()));
         }
 
-        Boolean isForeground = !isAppIsInBackground(context);
+        Boolean isForeground = isApplicationInForeground(context);
 
         if (!isForeground) {
             Application applicationContext = (Application) context.getApplicationContext();
@@ -226,6 +229,23 @@ public class MyPushMessageReceiver extends PushMessageReceiver {
             BGBaiDuPushModule.myPush.sendMsg(title, description, customContentString, BGBaiDuPushModule.DidReceiveMessage);
 
         }
+    }
+
+    private boolean isApplicationInForeground(Context context) {
+        ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningAppProcessInfo> processInfos = activityManager.getRunningAppProcesses();
+        if (processInfos != null) {
+            for (ActivityManager.RunningAppProcessInfo processInfo : processInfos) {
+                if (processInfo.processName.equals(context.getPackageName())) {
+                    if (processInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
+                        for (String d : processInfo.pkgList) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     //判断是否在后台

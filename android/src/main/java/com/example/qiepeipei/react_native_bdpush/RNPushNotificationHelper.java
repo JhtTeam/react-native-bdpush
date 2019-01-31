@@ -4,6 +4,7 @@ package com.example.qiepeipei.react_native_bdpush;
 import android.app.AlarmManager;
 import android.app.Application;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -58,7 +59,6 @@ public class RNPushNotificationHelper {
         return (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
     }
 
-
     public void sendToNotificationCentre(Bundle bundle) {
         try {
             Class intentClass = getMainActivityClass();
@@ -88,7 +88,7 @@ public class RNPushNotificationHelper {
                 title = context.getPackageManager().getApplicationLabel(appInfo).toString();
             }
 
-            NotificationCompat.Builder notification = new NotificationCompat.Builder(context)
+            NotificationCompat.Builder notification = new NotificationCompat.Builder(context, "default_channel")
                     .setContentTitle(title)
                     .setTicker(bundle.getString("ticker"))
                     .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
