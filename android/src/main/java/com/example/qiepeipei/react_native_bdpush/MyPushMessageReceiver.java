@@ -5,11 +5,18 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.baidu.android.pushservice.PushConstants;
 import com.baidu.android.pushservice.PushMessageReceiver;
+import com.facebook.react.ReactApplication;
+import com.facebook.react.ReactInstanceManager;
+import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReactContext;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.List;
@@ -19,6 +26,9 @@ import java.util.List;
  */
 public class MyPushMessageReceiver extends PushMessageReceiver {
 
+    private interface ReactContextInitListener {
+        void contextInitialized(ReactApplicationContext context);
+    }
 
     @Override
     public void onBind(Context context, int errorCode, String appid,
@@ -64,11 +74,71 @@ public class MyPushMessageReceiver extends PushMessageReceiver {
         customContentString 自定义内容，为空或者json字符串
     * */
     @Override
-    public void onMessage(Context context, String message, String customContentString) {
-        Log.d("百度推送", "onMessage");
-        if (!isAppIsInBackground(context)) {
-            BGBaiDuPushModule.myPush.sendMsg("", message, customContentString, BGBaiDuPushModule.DidReceiveMessage);
+    public void onMessage(final Context context, final String message, final String customContentString) {
+        String responseString = "onMessage message=" + message + " customContentString="
+                + customContentString;
+        Log.d("百度推送", responseString);
+        final JSONObject data = getPushData(message);
+        String title = message;
+        String description = message;
+        try {
+            title = (data != null) ? data.getString("title") : message;
+            description = (data != null) ? data.getString("description") : message;
+        } catch (JSONException e) {
+            Log.e("百度推送", e.toString());
         }
+        if (!isAppIsInBackground(context)) {
+            BGBaiDuPushModule.myPush.sendMsg(title, description, customContentString, BGBaiDuPushModule.DidReceiveMessage);
+        } else {
+            Context applicationContext = context.getApplicationContext();
+            final String _title = message;
+            final String _description = message;
+            handleEvent(applicationContext, new ReactContextInitListener() {
+                @Override
+                public void contextInitialized(ReactApplicationContext context) {
+                    BGBaiDuPushModule.myPush.sendMsg(_title, _description, customContentString, BGBaiDuPushModule.DidReceiveMessage);
+                }
+            });
+        }
+    }
+
+    private JSONObject getPushData(String dataString) {
+        try {
+            return new JSONObject(dataString);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private void handleEvent(final Context applicationContext, final ReactContextInitListener reactContextInitListener) {
+        // We need to run this on the main thread, as the React code assumes that is true.
+        // Namely, DevServerHelper constructs a Handler() without a Looper, which triggers:
+        // "Can't create handler inside thread that has not called Looper.prepare()"
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(new Runnable() {
+            public void run() {
+                // Construct and load our normal React JS code bundle
+                if (applicationContext instanceof ReactApplication) {
+                    ReactInstanceManager mReactInstanceManager = ((ReactApplication) applicationContext).getReactNativeHost().getReactInstanceManager();
+                    com.facebook.react.bridge.ReactContext context = mReactInstanceManager.getCurrentReactContext();
+                    // If it's constructed, send a notification
+                    if (context != null) {
+                        reactContextInitListener.contextInitialized((ReactApplicationContext) context);
+                    } else {
+                        // Otherwise wait for construction, then send the notification
+                        mReactInstanceManager.addReactInstanceEventListener(new ReactInstanceManager.ReactInstanceEventListener() {
+                            public void onReactContextInitialized(ReactContext context) {
+                                reactContextInitListener.contextInitialized((ReactApplicationContext) context);
+                            }
+                        });
+                        if (!mReactInstanceManager.hasStartedCreatingInitialContext()) {
+                            // Construct it in the background
+                            mReactInstanceManager.createReactContextInBackground();
+                        }
+                    }
+                }
+            }
+        });
     }
 
     /*接收通知点击的函数
