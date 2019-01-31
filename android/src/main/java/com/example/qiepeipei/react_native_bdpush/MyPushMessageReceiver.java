@@ -66,7 +66,9 @@ public class MyPushMessageReceiver extends PushMessageReceiver {
     @Override
     public void onMessage(Context context, String message, String customContentString) {
         Log.d("百度推送", "onMessage");
-        BGBaiDuPushModule.myPush.sendMsg("",message,customContentString,BGBaiDuPushModule.DidReceiveMessage);
+        if (!isAppIsInBackground(context)) {
+            BGBaiDuPushModule.myPush.sendMsg("", message, customContentString, BGBaiDuPushModule.DidReceiveMessage);
+        }
     }
 
     /*接收通知点击的函数
@@ -77,17 +79,22 @@ public class MyPushMessageReceiver extends PushMessageReceiver {
         customContentString 自定义内容，为空或者json字符串
     * */
     @Override
-    public void onNotificationClicked(Context context, String title, String description, String customContentString) {
+    public void onNotificationClicked(final Context context, final String title, final String description, final String customContentString) {
 
         Log.d("百度推送", "onNotificationClicked");
-
-        //发送通知
-        BGBaiDuPushModule.myPush.sendMsg(title,description,customContentString,BGBaiDuPushModule.DidOpenMessage);
-//
-//        String packageName = context.getApplicationContext().getPackageName();
-//        Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(packageName);
-//        launchIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-//        context.startActivity(launchIntent);
+        String packageName = context.getApplicationContext().getPackageName();
+        Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(packageName);
+        launchIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        context.startActivity(launchIntent);
+        android.os.Handler handler = new android.os.Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (!isAppIsInBackground(context)) {
+                    BGBaiDuPushModule.myPush.sendMsg(title, description, customContentString, BGBaiDuPushModule.DidOpenMessage);
+                }
+            }
+        }, 1000);
     }
 
     /*接收通知到达的函数
@@ -103,14 +110,11 @@ public class MyPushMessageReceiver extends PushMessageReceiver {
     public void onNotificationArrived(Context context, String title, String description, String customContentString) {
 
         Log.d("百度推送", "onNotificationArrived");
-        if(!isAppIsInBackground(context)){
+        if (!isAppIsInBackground(context)) {
             //发送通知
-            BGBaiDuPushModule.myPush.sendMsg(title,description,customContentString,BGBaiDuPushModule.DidReceiveMessage);
+            BGBaiDuPushModule.myPush.sendMsg(title, description, customContentString, BGBaiDuPushModule.DidReceiveMessage);
 
         }
-
-
-
     }
 
     //判断是否在后台

@@ -3,9 +3,14 @@ package com.example.qiepeipei.react_native_bdpush;
 /**
  * Created by qiepeipei on 2017/6/27.
  */
+import android.app.Notification;
+import android.media.RingtoneManager;
+import android.net.Uri;
+import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.baidu.android.pushservice.BasicPushNotificationBuilder;
 import com.baidu.android.pushservice.PushConstants;
 import com.baidu.android.pushservice.PushManager;
 import com.facebook.react.bridge.Arguments;
@@ -49,9 +54,21 @@ public class BGBaiDuPushModule extends ReactContextBaseJavaModule {
     }
 
     //初始化
-    public void initialise(){
+    public void initialise() {
         Log.d("百度推送", "正在初始化");
-        PushManager.startWork(getReactApplicationContext(), PushConstants.LOGIN_TYPE_API_KEY,Utils.getMetaValue(getReactApplicationContext(), "api_key"));
+        Log.d("百度推送", "sound uri: " + Settings.System.DEFAULT_NOTIFICATION_URI.toString());
+
+        PushManager.startWork(getReactApplicationContext(), PushConstants.LOGIN_TYPE_API_KEY, Utils.getMetaValue(getReactApplicationContext(), "api_key"));
+
+        BasicPushNotificationBuilder bBuilder = new BasicPushNotificationBuilder();
+        bBuilder.setChannelId("default_channel");
+        bBuilder.setChannelName("Baidu Push");
+        bBuilder.setNotificationDefaults(Notification.DEFAULT_ALL
+                | Notification.DEFAULT_SOUND);
+        bBuilder.setStatusbarIcon(R.drawable.ic_notification);
+
+        bBuilder.setNotificationSound(Settings.System.DEFAULT_NOTIFICATION_URI.toString());
+        PushManager.setNotificationBuilder(getReactApplicationContext(), 1, bBuilder);
     }
 
     //函数执行状态返回
