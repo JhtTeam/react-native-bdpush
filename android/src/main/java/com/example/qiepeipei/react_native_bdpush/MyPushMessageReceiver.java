@@ -1,10 +1,12 @@
 package com.example.qiepeipei.react_native_bdpush;
 
 import android.app.ActivityManager;
+import android.app.Application;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -20,6 +22,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.Random;
 
 /**
  * Created by qiepeipei on 16/8/13.
@@ -87,19 +90,57 @@ public class MyPushMessageReceiver extends PushMessageReceiver {
         } catch (JSONException e) {
             Log.e("百度推送", e.toString());
         }
-        if (!isAppIsInBackground(context)) {
-            BGBaiDuPushModule.myPush.sendMsg(title, description, customContentString, BGBaiDuPushModule.DidReceiveMessage);
-        } else {
-            Context applicationContext = context.getApplicationContext();
-            final String _title = message;
-            final String _description = message;
-            handleEvent(applicationContext, new ReactContextInitListener() {
-                @Override
-                public void contextInitialized(ReactApplicationContext context) {
+
+        Context applicationContext = context.getApplicationContext();
+        final String _title = message;
+        final String _description = message;
+        handleEvent(applicationContext, new ReactContextInitListener() {
+            @Override
+            public void contextInitialized(ReactApplicationContext context) {
+//                    BGBaiDuPushModule.myPush.sendMsg(_title, _description, customContentString, BGBaiDuPushModule.DidReceiveMessage);
+                if (!isAppIsInBackground(context)) {
                     BGBaiDuPushModule.myPush.sendMsg(_title, _description, customContentString, BGBaiDuPushModule.DidReceiveMessage);
+                } else {
+                    final Bundle bundle = createBundleFromMessage(message);
+                    handleRemotePushNotification(context, bundle);
                 }
-            });
+            }
+        });
+    }
+
+    private void handleRemotePushNotification(ReactApplicationContext context, Bundle bundle) {
+
+        // If notification ID is not provided by the user for push notification, generate one at random
+        if (bundle.getString("id") == null) {
+            Random randomNumberGenerator = new Random(System.currentTimeMillis());
+            bundle.putString("id", String.valueOf(randomNumberGenerator.nextInt()));
         }
+
+        Boolean isForeground = !isAppIsInBackground(context);
+
+        if (!isForeground) {
+            Application applicationContext = (Application) context.getApplicationContext();
+            RNPushNotificationHelper pushNotificationHelper = new RNPushNotificationHelper(applicationContext);
+            pushNotificationHelper.sendToNotificationCentre(bundle);
+        }
+    }
+
+    private Bundle createBundleFromMessage(String message) {
+        JSONObject jsonObject;
+        jsonObject = getPushData(message);
+        Bundle extras = new Bundle();
+        if (jsonObject != null) {
+            extras.putString(BaiduPushConstants.TITLE, jsonObject.optString(BaiduPushConstants.TITLE));
+            extras.putString(BaiduPushConstants.MESSAGE, jsonObject.optString(BaiduPushConstants.DESCRIPTION));
+            JSONObject customContent = jsonObject.optJSONObject(BaiduPushConstants.CUSTOM_CONTENT);
+            if (customContent != null) {
+                extras.putString(BaiduPushConstants.DATA, jsonObject.optJSONObject(BaiduPushConstants.CUSTOM_CONTENT).toString());
+            }
+        } else {
+            extras.putString(BaiduPushConstants.TITLE, message);
+            extras.putString(BaiduPushConstants.MESSAGE, message);
+        }
+        return extras;
     }
 
     private JSONObject getPushData(String dataString) {

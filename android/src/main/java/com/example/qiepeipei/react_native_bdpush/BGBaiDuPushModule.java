@@ -55,7 +55,7 @@ public class BGBaiDuPushModule extends ReactContextBaseJavaModule {
 
     //初始化
     public void initialise() {
-        Log.d("百度推送", "正在初始化");
+        Log.d("百度推送", "initialise");
         Log.d("百度推送", "sound uri: " + Settings.System.DEFAULT_NOTIFICATION_URI.toString());
 
         PushManager.startWork(getReactApplicationContext(), PushConstants.LOGIN_TYPE_API_KEY, Utils.getMetaValue(getReactApplicationContext(), "api_key"));
